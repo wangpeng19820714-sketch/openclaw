@@ -215,6 +215,7 @@
     "./cli-entry": "./openclaw.mjs"
   },
   "scripts": {
+    "start:server": "OPENCLAW_CONFIG_PATH=configs/openclaw.json node scripts/run-node.mjs gateway --port 18789",
     "android:assemble": "cd apps/android && ./gradlew :app:assembleDebug",
     "android:format": "cd apps/android && ./gradlew :app:ktlintFormat :benchmark:ktlintFormat",
     "android:install": "cd apps/android && ./gradlew :app:installDebug",

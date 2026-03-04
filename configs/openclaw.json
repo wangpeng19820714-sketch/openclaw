@@ -1,0 +1,126 @@
+{
+  "gateway": {
+    "mode": "local",
+    "port": 18789,
+    "auth": {
+      "mode": "token",
+      "token": "${OPENCLAW_GATEWAY_TOKEN}"
+    }
+  },
+  "agents": {
+    "defaults": {
+      "workspace": "~/.openclaw/workspace",
+      "model": {
+        "primary": "openai-codex/gpt-5.3-codex",
+        "fallbacks": [
+          "google-gemini-cli/gemini-3-pro-preview"
+        ]
+      }
+    },
+    "list": [
+      {
+        "id": "client",
+        "default": true,
+        "model": {
+          "primary": "openai-codex/gpt-5.3-codex",
+          "fallbacks": [
+            "google-gemini-cli/gemini-3-pro-preview"
+          ]
+        }
+      },
+      {
+        "id": "server",
+        "model": {
+          "primary": "openai-codex/gpt-5.3-codex"
+        }
+      },
+      {
+        "id": "pm",
+        "model": {
+          "primary": "google-gemini-cli/gemini-3-pro-preview"
+        }
+      }
+    ]
+  },
+  "auth": {
+    "profiles": {
+      "openai-codex:default": {
+        "provider": "openai-codex",
+        "mode": "oauth"
+      },
+      "google-gemini-cli:default": {
+        "provider": "google-gemini-cli",
+        "mode": "oauth"
+      }
+    },
+    "order": {
+      "openai-codex": [
+        "openai-codex:default"
+      ],
+      "google-gemini-cli": [
+        "google-gemini-cli:default"
+      ]
+    }
+  },
+  "plugins": {
+    "allow": [
+      "feishu",
+      "google-gemini-cli-auth",
+      "device-pair"
+    ],
+    "entries": {
+      "feishu": {
+        "enabled": true
+      },
+      "google-gemini-cli-auth": {
+        "enabled": true
+      }
+    }
+  },
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "connectionMode": "websocket",
+      "domain": "feishu",
+      "dmPolicy": "pairing",
+      "groupPolicy": "open",
+      "requireMention": false,
+      "defaultAccount": "bot_main",
+      "accounts": {
+        "bot_client": {
+          "appId": "${FEISHU_CLIENT_APP_ID}",
+          "appSecret": "${FEISHU_CLIENT_APP_SECRET}"
+        },
+        "bot_server": {
+          "enabled": false
+        },
+        "bot_pm": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  "bindings": [
+    {
+      "agentId": "client",
+      "match": {
+        "channel": "feishu",
+        "accountId": "bot_client"
+      }
+    },
+    {
+      "agentId": "server",
+      "match": {
+        "channel": "feishu",
+        "accountId": "bot_server"
+      }
+    },
+    {
+      "agentId": "pm",
+      "match": {
+        "channel": "feishu",
+        "accountId": "bot_pm"
+      }
+    }
+  ]
+}

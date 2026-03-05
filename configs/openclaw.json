@@ -12,9 +12,7 @@
       "workspace": "~/.openclaw/workspace",
       "model": {
         "primary": "openai-codex/gpt-5.3-codex",
-        "fallbacks": [
-          "google-gemini-cli/gemini-3-pro-preview"
-        ]
+        "fallbacks": ["google-gemini-cli/gemini-3-pro-preview"]
       }
     },
     "list": [
@@ -23,9 +21,7 @@
         "default": true,
         "model": {
           "primary": "openai-codex/gpt-5.3-codex",
-          "fallbacks": [
-            "google-gemini-cli/gemini-3-pro-preview"
-          ]
+          "fallbacks": ["google-gemini-cli/gemini-3-pro-preview"]
         }
       },
       {
@@ -60,20 +56,20 @@
       }
     },
     "order": {
-      "openai-codex": [
-        "openai-codex:default"
-      ],
-      "google-gemini-cli": [
-        "google-gemini-cli:default"
-      ]
+      "openai-codex": ["openai-codex:default"],
+      "google-gemini-cli": ["google-gemini-cli:default"]
+    }
+  },
+  "skills": {
+    "entries": {
+      "notion": {
+        "enabled": true,
+        "apiKey": "${NOTION_API_KEY}"
+      }
     }
   },
   "plugins": {
-    "allow": [
-      "feishu",
-      "google-gemini-cli-auth",
-      "device-pair"
-    ],
+    "allow": ["feishu", "google-gemini-cli-auth", "device-pair"],
     "entries": {
       "feishu": {
         "enabled": true
@@ -146,7 +142,7 @@
         "accountId": "bot_pm"
       }
     },
-      {
+    {
       "agentId": "ba",
       "match": {
         "channel": "feishu",

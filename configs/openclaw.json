@@ -112,25 +112,8 @@
             "memory_search",
             "memory_store",
             "memory_list",
-            "memory_get",
-            "memory_update",
-            "memory_history",
-            "memory_forget",
-            "memory_clear",
-            "memory_dashboard",
-            "feishu_doc",
             "feishu_app_scopes",
-            "feishu_chat",
-            "feishu_wiki",
-            "feishu_drive",
-            "feishu_bitable_get_meta",
-            "feishu_bitable_list_fields",
-            "feishu_bitable_list_records",
-            "feishu_bitable_get_record",
-            "feishu_bitable_create_record",
-            "feishu_bitable_update_record",
-            "feishu_bitable_create_app",
-            "feishu_bitable_create_field"
+            "feishu_chat"
           ],
           "deny": []
         }
@@ -240,7 +223,7 @@
   "plugins": {
     "allow": ["feishu", "google-gemini-cli-auth", "device-pair", "mem0"],
     "load": {
-      "paths": ["~/Documents/GitHub/OpenClaw/extensions-custom/mem0-upstream/openclaw"]
+      "paths": ["extensions-custom/mem0-upstream/openclaw"]
     },
     "slots": {
       "memory": "mem0"
@@ -256,12 +239,8 @@
         "enabled": true,
         "config": {
           "baseUrl": "http://127.0.0.1:8888",
-          "autoRecall": true,
-          "autoCapture": true,
-          "notifyOnLongTermWrite": true,
-          "longTermWriteNotice": "已写入长期记忆。",
           "topK": 5,
-          "requestTimeoutMs": 45000
+          "requestTimeoutMs": 120000
         }
       }
     }

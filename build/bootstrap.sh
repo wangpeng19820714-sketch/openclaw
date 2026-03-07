@@ -148,6 +148,57 @@ ensure_gateway_launchagent_loaded() {
     launchctl bootstrap "gui/${UID}" "${GATEWAY_LAUNCHD_PLIST}"
 }
 
+list_gateway_listener_pids() {
+  lsof -nP -iTCP:"${GATEWAY_PORT}" -sTCP:LISTEN -t 2>/dev/null | awk '!seen[$0]++'
+}
+
+describe_pid_command() {
+  local pid="$1"
+  ps -p "${pid}" -o command= 2>/dev/null || true
+}
+
+is_openclaw_gateway_pid() {
+  local pid="$1"
+  local command_line
+  command_line="$(describe_pid_command "${pid}")"
+  [[ -n "${command_line}" ]] || return 1
+  [[ "${command_line}" == *"openclaw-gateway"* ]] && return 0
+  [[ "${command_line}" == *"scripts/run-node.mjs gateway"* ]] && return 0
+  [[ "${command_line}" == *" openclaw.mjs gateway"* ]] && return 0
+  return 1
+}
+
+wait_for_pid_exit() {
+  local pid="$1"
+  local attempts="${2:-20}"
+  local i
+  for ((i = 1; i <= attempts; i++)); do
+    if ! kill -0 "${pid}" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.25
+  done
+  return 1
+}
+
+stop_residual_gateway_processes() {
+  local pid command_line
+  while IFS= read -r pid; do
+    [[ -n "${pid}" ]] || continue
+    if ! is_openclaw_gateway_pid "${pid}"; then
+      continue
+    fi
+    command_line="$(describe_pid_command "${pid}")"
+    log "Stopping residual gateway process pid=${pid} (${command_line})"
+    kill "${pid}" >/dev/null 2>&1 || true
+    if ! wait_for_pid_exit "${pid}"; then
+      log "Residual gateway pid=${pid} ignored SIGTERM; sending SIGKILL"
+      kill -9 "${pid}" >/dev/null 2>&1 || true
+      wait_for_pid_exit "${pid}" 8 || true
+    fi
+  done < <(list_gateway_listener_pids)
+}
+
 require_macos() {
   if [[ "$(uname -s)" != "Darwin" ]]; then
     die "This script only supports macOS."
@@ -425,6 +476,7 @@ cmd_start() {
   sync_env_to_state_dir
   ensure_requested_oauth_providers_ready
   ensure_gateway_launchagent_loaded || true
+  stop_residual_gateway_processes
 
   run_quiet "Starting gateway service" "${OPENCLAW_BIN}" gateway start
 
@@ -444,6 +496,7 @@ cmd_stop() {
   ensure_openclaw_installed
 
   run_quiet "Stopping gateway service" "${OPENCLAW_BIN}" gateway stop
+  stop_residual_gateway_processes
   log "Gateway stopped."
 }
 

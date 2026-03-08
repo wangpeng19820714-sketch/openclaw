@@ -120,6 +120,13 @@
             "memory_search",
             "memory_store",
             "memory_list",
+            "agents_list",
+            "sessions_list",
+            "sessions_history",
+            "sessions_send",
+            "sessions_spawn",
+            "session_status",
+            "subagents",
             "feishu_app_scopes",
             "feishu_chat"
           ],
@@ -129,6 +136,9 @@
       {
         "id": "ba",
         "workspace": "~/.openclaw/workspace/ba",
+        "subagents": {
+          "allowAgents": ["main", "client", "server", "pm"]
+        },
         "model": {
           "primary": "openai-codex/gpt-5.4",
           "fallbacks": [
@@ -147,6 +157,13 @@
             "memory_search",
             "memory_store",
             "memory_list",
+            "agents_list",
+            "sessions_list",
+            "sessions_history",
+            "sessions_send",
+            "sessions_spawn",
+            "session_status",
+            "subagents",
             "feishu_app_scopes",
             "feishu_chat"
           ],
@@ -258,6 +275,15 @@
         "enabled": true,
         "apiKey": "${NOTION_API_KEY}"
       }
+    }
+  },
+  "tools": {
+    "agentToAgent": {
+      "enabled": true,
+      "allow": ["main", "client", "server", "pm", "ba"]
+    },
+    "sessions": {
+      "visibility": "all"
     }
   },
   "plugins": {

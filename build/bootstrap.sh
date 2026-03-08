@@ -167,6 +167,8 @@ is_openclaw_gateway_pid() {
   [[ "${command_line}" == *"openclaw-gateway"* ]] && return 0
   [[ "${command_line}" == *"scripts/run-node.mjs gateway"* ]] && return 0
   [[ "${command_line}" == *" openclaw.mjs gateway"* ]] && return 0
+  [[ "${command_line}" == *"startGatewayServer("* ]] && return 0
+  [[ "${command_line}" == *"src/gateway/server.ts"* && "${command_line}" == *"--import tsx"* ]] && return 0
   return 1
 }
 

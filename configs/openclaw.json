@@ -127,6 +127,12 @@
             "sessions_spawn",
             "session_status",
             "subagents",
+            "workflow_memory_context",
+            "workflow_submit",
+            "workflow_status",
+            "workflow_list",
+            "workflow_cancel",
+            "workflow_validate",
             "feishu_app_scopes",
             "feishu_chat"
           ],
@@ -164,6 +170,12 @@
             "sessions_spawn",
             "session_status",
             "subagents",
+            "workflow_memory_context",
+            "workflow_submit",
+            "workflow_status",
+            "workflow_list",
+            "workflow_cancel",
+            "workflow_validate",
             "feishu_app_scopes",
             "feishu_chat"
           ],
@@ -259,8 +271,7 @@
   "gateway": {
     "port": 18789,
     "mode": "local",
-    "bind": "custom",
-    "customBindHost": "127.0.0.1",
+    "bind": "loopback",
     "controlUi": {
       "allowedOrigins": ["http://localhost:18789", "http://127.0.0.1:18789"]
     },
@@ -287,9 +298,12 @@
     }
   },
   "plugins": {
-    "allow": ["feishu", "google-gemini-cli-auth", "device-pair", "mem0"],
+    "allow": ["feishu", "google-gemini-cli-auth", "device-pair", "mem0", "orchestrator"],
     "load": {
-      "paths": ["/Users/pengwang/Documents/GitHub/OpenClaw/extensions-custom/mem0-openclaw"]
+      "paths": [
+        "/Users/pengwang/Documents/GitHub/OpenClaw/extensions-custom/mem0-openclaw",
+        "/Users/pengwang/Documents/GitHub/OpenClaw/extensions-custom/orchestrator"
+      ]
     },
     "slots": {
       "memory": "mem0"
@@ -300,6 +314,27 @@
       },
       "google-gemini-cli-auth": {
         "enabled": true
+      },
+      "orchestrator": {
+        "enabled": true,
+        "config": {
+          "pollIntervalMs": 5000,
+          "leaseTtlMs": 60000,
+          "maxConcurrentWorkflows": 4,
+          "maxConcurrentSteps": 8,
+          "defaultRunTimeoutSeconds": 900,
+          "defaultRetryLimit": 1,
+          "allowedTargetAgents": ["main", "client", "server", "pm", "ba"],
+          "memory": {
+            "enabled": true,
+            "baseUrl": "http://127.0.0.1:8888",
+            "requestTimeoutMs": 120000,
+            "planningTopK": 5,
+            "writeCompletedSummaries": true,
+            "writeFailureMemories": true
+          },
+          "cleanupCompletedAfterHours": 168
+        }
       },
       "mem0": {
         "enabled": true,

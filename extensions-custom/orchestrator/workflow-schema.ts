@@ -3,10 +3,14 @@ import { Type } from "@sinclair/typebox";
 export const WORKFLOW_STEP_KINDS = [
   "agent_run",
   "session_message",
+  "agent_message",
   "wait",
   "tool_call",
   "condition",
+  "fan_out",
 ] as const;
+
+export const FAN_OUT_BRANCH_KINDS = ["agent_run", "tool_call"] as const;
 
 export const CONDITION_OPERATORS = [
   "contains",
@@ -68,10 +72,32 @@ export const WorkflowStepSchema = Type.Object({
   kind: WorkflowStepKindSchema,
   agentId: Type.Optional(Type.String()),
   sessionRef: Type.Optional(Type.String()),
+  targetStepId: Type.Optional(Type.String()),
   task: Type.Optional(Type.String()),
   delaySeconds: Type.Optional(Type.Number({ minimum: 0, maximum: 604800 })),
   toolName: Type.Optional(Type.String()),
   arguments: Type.Optional(Type.Record(Type.String(), Type.Unknown())),
+  branches: Type.Optional(
+    Type.Array(
+      Type.Object({
+        id: Type.String(),
+        kind: Type.Unsafe<FanOutBranchKind>({
+          type: "string",
+          enum: [...FAN_OUT_BRANCH_KINDS],
+        }),
+        agentId: Type.Optional(Type.String()),
+        task: Type.Optional(Type.String()),
+        toolName: Type.Optional(Type.String()),
+        arguments: Type.Optional(Type.Record(Type.String(), Type.Unknown())),
+        label: Type.Optional(Type.String()),
+        thinking: Type.Optional(Type.String()),
+        runTimeoutSeconds: Type.Optional(Type.Number({ minimum: 0, maximum: 86400 })),
+        retry: Type.Optional(RetryPolicySchema),
+        metadata: Type.Optional(Type.Record(Type.String(), Type.Unknown())),
+      }),
+      { minItems: 1 },
+    ),
+  ),
   source: Type.Optional(ConditionSourceSchema),
   operator: Type.Optional(ConditionOperatorSchema),
   value: Type.Optional(Type.String()),
@@ -154,6 +180,7 @@ export type RetryPolicy = {
 };
 
 export type WorkflowStepKind = (typeof WORKFLOW_STEP_KINDS)[number];
+export type FanOutBranchKind = (typeof FAN_OUT_BRANCH_KINDS)[number];
 export type ConditionOperator = (typeof CONDITION_OPERATORS)[number];
 export type ConditionSource = (typeof CONDITION_SOURCES)[number];
 export type ConditionFalseAction = (typeof CONDITION_FALSE_ACTIONS)[number];
@@ -184,6 +211,16 @@ export type SessionMessageStep = {
   metadata?: Record<string, unknown>;
 };
 
+export type AgentMessageStep = {
+  id: string;
+  kind: "agent_message";
+  targetStepId: string;
+  task: string;
+  dependsOn?: string[];
+  retry?: RetryPolicy;
+  metadata?: Record<string, unknown>;
+};
+
 export type WaitStep = {
   id: string;
   kind: "wait";
@@ -207,6 +244,40 @@ export type ToolCallStep = {
   metadata?: Record<string, unknown>;
 };
 
+export type FanOutBranch =
+  | {
+      id: string;
+      kind: "agent_run";
+      agentId: string;
+      task: string;
+      label?: string;
+      thinking?: string;
+      runTimeoutSeconds?: number;
+      retry?: RetryPolicy;
+      metadata?: Record<string, unknown>;
+    }
+  | {
+      id: string;
+      kind: "tool_call";
+      agentId: string;
+      toolName: string;
+      arguments?: Record<string, unknown>;
+      task?: string;
+      label?: string;
+      thinking?: string;
+      runTimeoutSeconds?: number;
+      retry?: RetryPolicy;
+      metadata?: Record<string, unknown>;
+    };
+
+export type FanOutStep = {
+  id: string;
+  kind: "fan_out";
+  branches: FanOutBranch[];
+  dependsOn?: string[];
+  metadata?: Record<string, unknown>;
+};
+
 export type ConditionStep = {
   id: string;
   kind: "condition";
@@ -222,9 +293,11 @@ export type ConditionStep = {
 export type WorkflowStep =
   | AgentRunStep
   | SessionMessageStep
+  | AgentMessageStep
   | WaitStep
   | ToolCallStep
-  | ConditionStep;
+  | ConditionStep
+  | FanOutStep;
 
 export type WorkflowDefinition = {
   version: 1;

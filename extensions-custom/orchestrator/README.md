@@ -43,12 +43,14 @@ v1 keeps the workflow model intentionally small:
 - explicit DAG-style step dependencies
 - lightweight branching via `condition`
 - no human approval gates yet
-- five step kinds:
+- seven step kinds:
   - `agent_run`
   - `session_message`
+  - `agent_message`
   - `wait`
   - `tool_call`
   - `condition`
+  - `fan_out`
 
 ## Proposed plugin config
 
@@ -103,6 +105,80 @@ Top-level workflow:
       "agentId": "ba",
       "task": "Summarize the final result to the requester.",
       "dependsOn": ["implement"]
+    }
+  ]
+}
+```
+
+`agent_message` is an ergonomic alias for sending a follow-up back into a previously created
+agent session. It resolves `targetStepId` to the earlier step's session and expands to an
+internal `session_message` step.
+
+Example explicit round-trip:
+
+```json
+{
+  "version": 1,
+  "label": "PM and BA round trip",
+  "steps": [
+    {
+      "id": "pm_draft",
+      "kind": "agent_run",
+      "agentId": "pm",
+      "task": "Write the draft."
+    },
+    {
+      "id": "ba_review",
+      "kind": "agent_run",
+      "agentId": "ba",
+      "dependsOn": ["pm_draft"],
+      "task": "Review the PM draft."
+    },
+    {
+      "id": "pm_followup",
+      "kind": "agent_message",
+      "targetStepId": "pm_draft",
+      "dependsOn": ["ba_review"],
+      "task": "Send the BA review back to PM and ask for an updated reply."
+    }
+  ]
+}
+```
+
+`fan_out` expands one logical step into multiple parallel branches. Any downstream step that
+depends on the `fan_out` step id automatically fans in on all expanded branch ids.
+
+Example fan-out and fan-in:
+
+```json
+{
+  "version": 1,
+  "label": "Parallel analysis then synthesis",
+  "steps": [
+    {
+      "id": "parallel_analysis",
+      "kind": "fan_out",
+      "branches": [
+        {
+          "id": "pm_track",
+          "kind": "agent_run",
+          "agentId": "pm",
+          "task": "Analyze the project plan."
+        },
+        {
+          "id": "ba_track",
+          "kind": "agent_run",
+          "agentId": "ba",
+          "task": "Analyze the business constraints."
+        }
+      ]
+    },
+    {
+      "id": "synthesize",
+      "kind": "agent_run",
+      "agentId": "server",
+      "dependsOn": ["parallel_analysis"],
+      "task": "Merge both branch outputs into one final response."
     }
   ]
 }
@@ -236,5 +312,7 @@ Current limitations:
 - cancellation is cooperative only; running agent steps are not force-aborted yet
 - step `model` is accepted in schema but not applied yet
 - retry backoff is not persisted yet
+- timed out agent steps are retried through the normal retry policy, but there is no separate lease-based stuck-run recovery yet
 - `tool_call` is executed as a constrained agent step that must call the named tool before replying; it is not a direct gateway RPC tool executor
-- fan-out, fan-in, approval, cron trigger, subworkflow, and workflow templates are still future work
+- `fan_out` is implemented by expansion into branch steps; the stored workflow status shows the expanded branch step ids such as `parallel_analysis.pm_track`
+- approval, cron trigger, subworkflow, and workflow templates are still future work

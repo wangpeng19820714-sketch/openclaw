@@ -1,10 +1,17 @@
 import type { OrchestratorConfig } from "./config.js";
-import type { WorkflowDefinition, WorkflowStep, WorkflowStepKind } from "./workflow-schema.js";
+import { expandWorkflowDefinition } from "./dsl.js";
+import type {
+  FanOutBranch,
+  WorkflowDefinition,
+  WorkflowStep,
+  WorkflowStepKind,
+} from "./workflow-schema.js";
 
 export type WorkflowValidationResult = {
   ok: boolean;
   errors: string[];
   warnings: string[];
+  normalizedWorkflow?: WorkflowDefinition;
 };
 
 function ensureUniqueStepIds(steps: WorkflowStep[], errors: string[]) {
@@ -83,6 +90,26 @@ function validateTargetAgent(
   }
 }
 
+function validateFanOutBranch(
+  stepId: string,
+  branch: FanOutBranch,
+  cfg: OrchestratorConfig,
+  errors: string[],
+  requesterAgentId?: string,
+) {
+  const branchStepId = `${stepId}.${branch.id}`;
+  validateTargetAgent(branchStepId, branch.agentId, cfg, errors, requesterAgentId);
+  if (branch.kind === "agent_run") {
+    if (!branch.task?.trim()) {
+      errors.push(`Step ${branchStepId} is fan_out agent_run but missing task`);
+    }
+    return;
+  }
+  if (!branch.toolName?.trim()) {
+    errors.push(`Step ${branchStepId} is fan_out tool_call but missing toolName`);
+  }
+}
+
 function validateStepShape(
   step: WorkflowStep,
   cfg: OrchestratorConfig,
@@ -105,6 +132,15 @@ function validateStepShape(
     }
     return;
   }
+  if (step.kind === "agent_message") {
+    if (!step.targetStepId?.trim()) {
+      errors.push(`Step ${step.id} is agent_message but missing targetStepId`);
+    }
+    if (!step.task?.trim()) {
+      errors.push(`Step ${step.id} is agent_message but missing task`);
+    }
+    return;
+  }
   if (step.kind === "wait") {
     if (typeof step.delaySeconds !== "number" || step.delaySeconds < 0) {
       errors.push(`Step ${step.id} is wait but missing delaySeconds`);
@@ -118,22 +154,38 @@ function validateStepShape(
     }
     return;
   }
-  if (step.kind === "condition") {
-    if (!step.dependsOn?.length) {
-      errors.push(`Step ${step.id} is condition but missing dependsOn`);
+  if (step.kind === "fan_out") {
+    if (!step.branches?.length) {
+      errors.push(`Step ${step.id} is fan_out but missing branches`);
+      return;
     }
-    if (!step.operator) {
-      errors.push(`Step ${step.id} is condition but missing operator`);
-    }
-    if (step.operator !== "exists" && !step.value?.trim()) {
-      errors.push(`Step ${step.id} condition operator ${step.operator} requires a value`);
-    }
-    if (step.operator === "matches_regex" && step.value) {
-      try {
-        new RegExp(step.value);
-      } catch (err) {
-        errors.push(`Step ${step.id} has invalid regex: ${String(err)}`);
+    const branchIds = new Set<string>();
+    for (const branch of step.branches) {
+      if (!branch.id?.trim()) {
+        errors.push(`Step ${step.id} fan_out branch is missing id`);
+      } else if (branchIds.has(branch.id)) {
+        errors.push(`Step ${step.id} fan_out has duplicate branch id ${branch.id}`);
+      } else {
+        branchIds.add(branch.id);
       }
+      validateFanOutBranch(step.id, branch, cfg, errors, requesterAgentId);
+    }
+    return;
+  }
+  if (!step.dependsOn?.length) {
+    errors.push(`Step ${step.id} is condition but missing dependsOn`);
+  }
+  if (!step.operator) {
+    errors.push(`Step ${step.id} is condition but missing operator`);
+  }
+  if (step.operator !== "exists" && !step.value?.trim()) {
+    errors.push(`Step ${step.id} condition operator ${step.operator} requires a value`);
+  }
+  if (step.operator === "matches_regex" && step.value) {
+    try {
+      new RegExp(step.value);
+    } catch (err) {
+      errors.push(`Step ${step.id} has invalid regex: ${String(err)}`);
     }
   }
 }
@@ -187,12 +239,46 @@ export function validateWorkflowDefinition(
         `Step ${step.id} uses step kind ${step.kind}, which ${requesterAgentId} is not allowed to submit`,
       );
     }
+    if (step.kind === "fan_out") {
+      for (const branch of step.branches ?? []) {
+        if (allowedKinds.size > 0 && !allowedKinds.has(branch.kind)) {
+          errors.push(`Step ${step.id}.${branch.id} uses disabled branch kind ${branch.kind}`);
+        }
+        if (
+          requesterAllowedKinds &&
+          requesterAllowedKinds.size > 0 &&
+          !requesterAllowedKinds.has(branch.kind)
+        ) {
+          errors.push(
+            `Step ${step.id}.${branch.id} uses branch kind ${branch.kind}, which ${requesterAgentId} is not allowed to submit`,
+          );
+        }
+      }
+    }
     validateStepShape(step, cfg, errors, requesterAgentId);
   }
 
-  if (workflow.steps.length > cfg.maxConcurrentSteps) {
+  let normalizedWorkflow: WorkflowDefinition | undefined;
+  if (errors.length === 0) {
+    try {
+      const expanded = expandWorkflowDefinition(workflow);
+      normalizedWorkflow = expanded.workflow;
+      warnings.push(...expanded.warnings);
+      ensureUniqueStepIds(normalizedWorkflow.steps, errors);
+      ensureDependsOnExists(normalizedWorkflow.steps, errors);
+      detectCycles(normalizedWorkflow.steps, errors);
+      for (const step of normalizedWorkflow.steps) {
+        validateStepShape(step, cfg, errors, requesterAgentId);
+      }
+    } catch (err) {
+      errors.push(String(err));
+    }
+  }
+
+  const effectiveStepCount = normalizedWorkflow?.steps.length ?? workflow.steps.length;
+  if (effectiveStepCount > cfg.maxConcurrentSteps) {
     warnings.push(
-      `Workflow defines ${workflow.steps.length} steps, which exceeds maxConcurrentSteps=${cfg.maxConcurrentSteps}`,
+      `Workflow defines ${effectiveStepCount} executable steps, which exceeds maxConcurrentSteps=${cfg.maxConcurrentSteps}`,
     );
   }
 
@@ -200,5 +286,6 @@ export function validateWorkflowDefinition(
     ok: errors.length === 0,
     errors,
     warnings,
+    normalizedWorkflow,
   };
 }

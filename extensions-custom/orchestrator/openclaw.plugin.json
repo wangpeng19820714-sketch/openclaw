@@ -54,7 +54,7 @@
       "label": "Allowed Step Kinds",
       "help": "Optional global allowlist of workflow step kinds.",
       "advanced": true,
-      "placeholder": "[\"agent_run\", \"tool_call\", \"condition\"]"
+      "placeholder": "[\"agent_run\", \"agent_message\", \"fan_out\", \"tool_call\", \"condition\"]"
     },
     "submitterPolicies": {
       "label": "Submitter Policies",
@@ -131,7 +131,15 @@
         "type": "array",
         "items": {
           "type": "string",
-          "enum": ["agent_run", "session_message", "wait", "tool_call", "condition"]
+          "enum": [
+            "agent_run",
+            "session_message",
+            "agent_message",
+            "wait",
+            "tool_call",
+            "condition",
+            "fan_out"
+          ]
         }
       },
       "submitterPolicies": {
@@ -144,7 +152,15 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["agent_run", "session_message", "wait", "tool_call", "condition"]
+                "enum": [
+                  "agent_run",
+                  "session_message",
+                  "agent_message",
+                  "wait",
+                  "tool_call",
+                  "condition",
+                  "fan_out"
+                ]
               }
             },
             "allowedTargetAgents": {

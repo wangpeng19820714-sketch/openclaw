@@ -233,16 +233,17 @@ export class OrchestratorRuntime {
     if (!validation.ok) {
       throw new Error(`Invalid workflow: ${validation.errors.join("; ")}`);
     }
+    const normalizedWorkflow = validation.normalizedWorkflow ?? input.workflow;
     const workflowId = randomUUID();
     const record = await this.store.createWorkflow({
       workflowId,
-      definition: input.workflow,
+      definition: normalizedWorkflow,
       requesterAgentId: input.requesterAgentId,
       requesterSessionKey: input.requesterSessionKey,
       startAt: input.startAt,
     });
     const enriched = await this.attachPlanningMemories(record);
-    this.logger.info(`orchestrator: accepted workflow ${workflowId} (${input.workflow.label})`);
+    this.logger.info(`orchestrator: accepted workflow ${workflowId} (${normalizedWorkflow.label})`);
     return {
       workflowId,
       status: enriched.status,
@@ -493,12 +494,7 @@ export class OrchestratorRuntime {
         continue;
       }
       if (waitRes?.status === "timeout" && waitRes.endedAt != null) {
-        await this.store.updateStep(workflow.workflowId, stepRecord.stepId, (step) => ({
-          ...step,
-          status: "timed_out",
-          completedAt: nowIso(),
-          lastError: "Agent run timed out",
-        }));
+        await this.failStep(workflow.workflowId, definition, stepRecord, "Agent run timed out");
         continue;
       }
       await this.failStep(

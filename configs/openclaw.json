@@ -295,14 +295,25 @@
     }
   },
   "skills": {
+    "load": {
+      "extraDirs": ["/Users/pengwang/Documents/GitHub/OpenClaw/extensions-custom/skills"]
+    },
     "entries": {
       "notion": {
         "enabled": true,
         "apiKey": "${NOTION_API_KEY}"
+      },
+      "openclaw-version-bump": {
+        "enabled": true
       }
     }
   },
   "tools": {
+    "exec": {
+      "pathPrepend": [
+        "/Users/pengwang/Documents/GitHub/OpenClaw/extensions-custom/skills/openclaw-version-bump"
+      ]
+    },
     "agentToAgent": {
       "enabled": true,
       "allow": ["main", "client", "server", "pm", "ba"]

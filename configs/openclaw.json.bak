@@ -1,7 +1,7 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.3.2",
-    "lastTouchedAt": "2026-03-11T01:27:21.565Z"
+    "lastTouchedAt": "2026-03-11T01:27:20.539Z"
   },
   "auth": {
     "profiles": {
@@ -19,7 +19,9 @@
       }
     },
     "order": {
-      "openai-codex": ["openai-codex:default"],
+      "openai-codex": [
+        "openai-codex:default"
+      ],
       "google-gemini-cli": [
         "google-gemini-cli:wangpeng19820714@gmail.com",
         "google-gemini-cli:default"
@@ -30,7 +32,9 @@
     "defaults": {
       "model": {
         "primary": "google-gemini-cli/gemini-3-pro-preview",
-        "fallbacks": ["google-gemini-cli/gemini-3-pro-preview"]
+        "fallbacks": [
+          "google-gemini-cli/gemini-3-pro-preview"
+        ]
       },
       "models": {
         "google-gemini-cli/gemini-3-pro-preview": {}
@@ -49,7 +53,12 @@
           "primary": "google-gemini-cli/gemini-3-pro-preview"
         },
         "subagents": {
-          "allowAgents": ["client", "pm", "server", "ba"]
+          "allowAgents": [
+            "client",
+            "pm",
+            "server",
+            "ba"
+          ]
         },
         "tools": {
           "allow": [
@@ -80,10 +89,17 @@
         "workspace": "~/.openclaw/workspace/client",
         "model": {
           "primary": "openai-codex/gpt-5.4",
-          "fallbacks": ["google-gemini-cli/gemini-3-pro-preview"]
+          "fallbacks": [
+            "google-gemini-cli/gemini-3-pro-preview"
+          ]
         },
         "subagents": {
-          "allowAgents": ["main", "pm", "server", "ba"]
+          "allowAgents": [
+            "main",
+            "pm",
+            "server",
+            "ba"
+          ]
         },
         "tools": {
           "allow": [
@@ -114,7 +130,9 @@
         "workspace": "~/.openclaw/workspace/server",
         "model": {
           "primary": "openai-codex/gpt-5.4",
-          "fallbacks": ["google-gemini-cli/gemini-3-pro-preview"]
+          "fallbacks": [
+            "google-gemini-cli/gemini-3-pro-preview"
+          ]
         },
         "tools": {
           "allow": [],
@@ -132,7 +150,12 @@
           ]
         },
         "subagents": {
-          "allowAgents": ["main", "client", "server", "ba"]
+          "allowAgents": [
+            "main",
+            "client",
+            "server",
+            "ba"
+          ]
         },
         "tools": {
           "allow": [
@@ -169,7 +192,12 @@
           ]
         },
         "subagents": {
-          "allowAgents": ["main", "client", "server", "pm"]
+          "allowAgents": [
+            "main",
+            "client",
+            "server",
+            "pm"
+          ]
         },
         "tools": {
           "allow": [
@@ -203,14 +231,16 @@
     },
     "agentToAgent": {
       "enabled": true,
-      "allow": ["main", "client", "server", "pm", "ba"]
+      "allow": [
+        "main",
+        "client",
+        "server",
+        "pm",
+        "ba"
+      ]
     },
     "exec": {
-      "pathPrepend": [
-        "/Users/pengwang/Documents/GitHub/OpenClaw/scripts/openclaw-tools",
-        "/Users/pengwang/Documents/GitHub/OpenClaw/bin/openclaw-tools",
-        "/Users/pengwang/Documents/GitHub/OpenClaw"
-      ]
+      "pathPrepend": []
     }
   },
   "bindings": [
@@ -267,7 +297,9 @@
       "accounts": {
         "default": {
           "dmPolicy": "open",
-          "allowFrom": ["*"],
+          "allowFrom": [
+            "*"
+          ],
           "groupPolicy": "open",
           "groupAllowFrom": []
         },
@@ -303,7 +335,10 @@
     "bind": "custom",
     "customBindHost": "127.0.0.1",
     "controlUi": {
-      "allowedOrigins": ["http://localhost:18789", "http://127.0.0.1:18789"]
+      "allowedOrigins": [
+        "http://localhost:18789",
+        "http://127.0.0.1:18789"
+      ]
     },
     "auth": {
       "mode": "token",
@@ -312,7 +347,9 @@
   },
   "skills": {
     "load": {
-      "extraDirs": ["/Users/pengwang/Documents/GitHub/OpenClaw/extensions-custom/skills"]
+      "extraDirs": [
+        "/Users/pengwang/Documents/GitHub/OpenClaw/extensions-custom/skills"
+      ]
     },
     "entries": {
       "notion": {
@@ -322,9 +359,16 @@
     }
   },
   "plugins": {
-    "allow": ["feishu", "google-gemini-cli-auth", "device-pair", "mem0"],
+    "allow": [
+      "feishu",
+      "google-gemini-cli-auth",
+      "device-pair",
+      "mem0"
+    ],
     "load": {
-      "paths": ["/Users/pengwang/Documents/GitHub/OpenClaw/extensions-custom/mem0-openclaw"]
+      "paths": [
+        "/Users/pengwang/Documents/GitHub/OpenClaw/extensions-custom/mem0-openclaw"
+      ]
     },
     "slots": {
       "memory": "mem0"

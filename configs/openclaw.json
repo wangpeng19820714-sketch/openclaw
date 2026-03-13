@@ -324,8 +324,25 @@
       }
     }
   },
+  "acp": {
+    "enabled": true,
+    "dispatch": {
+      "enabled": true
+    },
+    "backend": "acpx",
+    "defaultAgent": "codex",
+    "allowedAgents": ["pi", "claude", "codex", "opencode", "gemini", "kimi"],
+    "maxConcurrentSessions": 8,
+    "stream": {
+      "coalesceIdleMs": 300,
+      "maxChunkChars": 1200
+    },
+    "runtime": {
+      "ttlMinutes": 120
+    }
+  },
   "plugins": {
-    "allow": ["feishu", "google-gemini-cli-auth", "device-pair", "mem0", "orchestrator"],
+    "allow": ["feishu", "google-gemini-cli-auth", "device-pair", "mem0", "orchestrator", "acpx"],
     "load": {
       "paths": [
         "/Users/pengwang/Documents/GitHub/OpenClaw/extensions-custom/mem0-openclaw",
@@ -360,6 +377,19 @@
           "defaultRunTimeoutSeconds": 300,
           "defaultRetryLimit": 1,
           "allowedTargetAgents": ["pm", "ba", "client", "main", "server"]
+        }
+      },
+      "acpx": {
+        "enabled": true,
+        "config": {
+          "permissionMode": "approve-all",
+          "nonInteractivePermissions": "fail",
+          "mcpServers": {
+            "blender": {
+              "command": "/opt/homebrew/bin/uvx",
+              "args": ["blender-mcp"]
+            }
+          }
         }
       }
     }
